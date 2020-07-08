@@ -35,6 +35,7 @@ public class Torus2 {
     private float[] modelMatrix = new float[16];
     private float[] mvMatrix = new float[16];
     private float[] mvpMatrix = new float[16];
+    private float[] temporaryMatrix=new float[16];
 
     public Torus2(Context context) {
         this.context = context;
@@ -44,7 +45,7 @@ public class Torus2 {
 
         Scanner scanner = null;
         try {
-            scanner = new Scanner(context.getAssets().open("TestTorus.obj"));
+            scanner = new Scanner(context.getAssets().open("Kostka.obj"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -104,13 +105,17 @@ public class Torus2 {
     }
 
 
-    public void draw(float[] viewMatrix, float[] projectionMatrix) {
+    public void draw(float[] viewMatrix, float[] projectionMatrix, float[] rotation) {
 
         glUseProgram(program);
 
         Matrix.setIdentityM(modelMatrix, 0);
         Matrix.translateM(modelMatrix, 0, 0.0f, 0.0f, -2.5f);
         Matrix.rotateM(modelMatrix, 0, 30, 1.0f, 0.0f, 0.0f);
+
+        // Rotate the cube taking the overall rotation into account.
+        Matrix.multiplyMM(temporaryMatrix, 0, modelMatrix, 0, rotation, 0);
+        System.arraycopy(temporaryMatrix, 0, modelMatrix, 0, 16);
 
 
         // This multiplies the view matrix by the model matrix, and stores

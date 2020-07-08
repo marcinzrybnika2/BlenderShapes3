@@ -1,10 +1,7 @@
 package com.android.blendershape3;
 
-import android.content.Context;
-import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
-import android.util.Log;
 
 import com.android.blendershape3.shapes.AirHockeyTable;
 import com.android.blendershape3.shapes.Torus2;
@@ -17,7 +14,6 @@ import static android.opengl.GLES20.GL_DEPTH_BUFFER_BIT;
 import static android.opengl.GLES20.glClear;
 import static android.opengl.GLES20.glClearColor;
 import static android.opengl.GLES20.glViewport;
-import static android.opengl.Matrix.frustumM;
 
 public class BSRenderer implements GLSurfaceView.Renderer {
 
@@ -68,6 +64,12 @@ public class BSRenderer implements GLSurfaceView.Renderer {
      */
     private final float[] mvpMatrix = new float[16];
 
+    /** Store the accumulated rotation. */
+    private final float[] accumulatedRotation = new float[16];
+
+    /** Store the current rotation. */
+    private final float[] currentRotation = new float[16];
+
     /**
      * Additional matrix
      */
@@ -106,6 +108,8 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         // matrices separately if we choose.
         Matrix.setLookAtM(viewMatrix, 0, eyeX, eyeY, eyeZ, lookX, lookY, lookZ, upX, upY, upZ);
 
+        // Initialize the accumulated rotation matrix
+        Matrix.setIdentityM(accumulatedRotation, 0);
 
 //        table = new AirHockeyTable(mainActivity);
         torus2=new Torus2(mainActivity);
@@ -141,9 +145,21 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Set a matrix that contains the current rotation.
+        Matrix.setIdentityM(currentRotation, 0);
+        Matrix.rotateM(currentRotation, 0, deltaX, 0.0f, 1.0f, 0.0f);
+        Matrix.rotateM(currentRotation, 0, deltaY, 1.0f, 0.0f, 0.0f);
+        deltaX = 0.0f;
+        deltaY = 0.0f;
+
+        // Multiply the current rotation by the accumulated rotation, and then set the accumulated rotation to the result.
+        Matrix.multiplyMM(temporaryMatrix, 0, currentRotation, 0, accumulatedRotation, 0);
+        System.arraycopy(temporaryMatrix, 0, accumulatedRotation, 0, 16);
+
+
 
 //        table.draw();
-        torus2.draw(viewMatrix,projectionMatrix);
+        torus2.draw(viewMatrix,projectionMatrix,accumulatedRotation);
 
     }
 }
