@@ -179,10 +179,10 @@ public class Shape {
         GLES20.glVertexAttribPointer(aNormalLocation,3,GL_FLOAT,false,0,normalsBuffer);
         glEnableVertexAttribArray(aNormalLocation);
 
-        GLES20.glDrawArrays(GL_TRIANGLES,0,sourceFacesAndNormalsList.size());
+        GLES20.glDrawArrays(GL_TRIANGLES,0,sourceFacesAndNormalsList.size()*3);
 
-//        glDisableVertexAttribArray(aPositionLocation);
-//        glDisableVertexAttribArray(aNormalLocation);
+        glDisableVertexAttribArray(aPositionLocation);
+        glDisableVertexAttribArray(aNormalLocation);
 
     }
 
