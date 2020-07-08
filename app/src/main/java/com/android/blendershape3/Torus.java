@@ -5,8 +5,6 @@ package com.android.blendershape3;
 import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
-import android.util.Log;
-
 
 
 import org.apache.commons.io.IOUtils;
@@ -25,6 +23,7 @@ import java.util.Scanner;
 public class Torus {
 
     private static String TAG ="Torus: ";
+    private Context context;
 
     private List<String> verticesList;
     private List<String> facesList;
@@ -34,7 +33,12 @@ public class Torus {
 
     private int program;
 
+    /**
+     * @param context
+     */
     public Torus(Context context) {
+        this.context=context;
+
         verticesList = new ArrayList<>();
         facesList = new ArrayList<>();
 
@@ -93,7 +97,7 @@ public class Torus {
         facesBuffer.position(0);
 
         String vertexShaderCode = null;
-        InputStream vertexShaderStream = context.getResources().openRawResource(R.raw.vertex_shader);
+        InputStream vertexShaderStream = context.getResources().openRawResource(R.raw.bs_vertex_shader);
         try {
             vertexShaderCode = IOUtils.toString(vertexShaderStream, Charset.defaultCharset());
             vertexShaderStream.close();
@@ -102,7 +106,7 @@ public class Torus {
         }
 //        Log.d(LOG_TAG,"vertexShaderCode= "+vertexShaderCode);
         String fragmentShaderCode = null;
-        InputStream fragmentShaderStream = context.getResources().openRawResource(R.raw.fragment_shader);
+        InputStream fragmentShaderStream = context.getResources().openRawResource(R.raw.bs_fragment_shader);
         try {
             fragmentShaderCode = IOUtils.toString(fragmentShaderStream, Charset.defaultCharset());
             fragmentShaderStream.close();
@@ -134,7 +138,7 @@ public class Torus {
         int position = GLES20.glGetAttribLocation(program, "position");
         GLES20.glEnableVertexAttribArray(position);
 
-        GLES20.glVertexAttribPointer(position, 3, GLES20.GL_FLOAT, false, 3 * 4, verticesBuffer);
+        GLES20.glVertexAttribPointer(position, 3, GLES20.GL_FLOAT, false, 0, verticesBuffer);
 
         float[] projectionMatrix = new float[16];
         float[] viewMatrix = new float[16];
