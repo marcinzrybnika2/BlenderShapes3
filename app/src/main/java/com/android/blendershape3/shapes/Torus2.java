@@ -37,6 +37,11 @@ public class Torus2 {
     private float[] mvpMatrix = new float[16];
     private float[] temporaryMatrix=new float[16];
 
+    /**
+     * Constructor
+     *
+     * @param context
+     */
     public Torus2(Context context) {
         this.context = context;
 

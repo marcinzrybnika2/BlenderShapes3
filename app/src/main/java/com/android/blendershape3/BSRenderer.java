@@ -4,6 +4,7 @@ import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 
 import com.android.blendershape3.shapes.AirHockeyTable;
+import com.android.blendershape3.shapes.Shape;
 import com.android.blendershape3.shapes.Torus2;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -21,6 +22,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
     AirHockeyTable table;
     Torus2 torus2;
+    Shape shape;
 
     /** References to other main objects. */
     private final MainActivity mainActivity;
@@ -112,8 +114,8 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         Matrix.setIdentityM(accumulatedRotation, 0);
 
 //        table = new AirHockeyTable(mainActivity);
-        torus2=new Torus2(mainActivity);
-
+//        torus2=new Torus2(mainActivity);
+        shape=new Shape(mainActivity);
     }
 
 
@@ -159,7 +161,8 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
 
 //        table.draw();
-        torus2.draw(viewMatrix,projectionMatrix,accumulatedRotation);
+//        torus2.draw(viewMatrix,projectionMatrix,accumulatedRotation);
+        shape.draw(viewMatrix,projectionMatrix,accumulatedRotation);
 
     }
 }
