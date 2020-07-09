@@ -20,6 +20,7 @@ public class ShapeShaderProgram extends ShaderProgram {
     public ShapeShaderProgram(Context context) {
         super(context, R.raw.shape_vertex_shader, R.raw.shape_fragment_shader);
 
+
         aPositionLocation = GLES20.glGetAttribLocation(program, A_POSITION);
         aNormalPosition = GLES20.glGetAttribLocation(program, A_NORMAL);
 
@@ -39,6 +40,7 @@ public class ShapeShaderProgram extends ShaderProgram {
     }
 
     public int getaPositionLocation() {
+
         return aPositionLocation;
     }
 

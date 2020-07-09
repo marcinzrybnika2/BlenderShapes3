@@ -14,10 +14,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import static android.opengl.GLES20.GL_ARRAY_BUFFER;
 import static android.opengl.GLES20.GL_FLOAT;
+import static android.opengl.GLES20.GL_POINTS;
+import static android.opengl.GLES20.GL_STATIC_DRAW;
 import static android.opengl.GLES20.GL_TRIANGLES;
+import static android.opengl.GLES20.glBindBuffer;
+import static android.opengl.GLES20.glBindTexture;
+import static android.opengl.GLES20.glBufferData;
 import static android.opengl.GLES20.glDisableVertexAttribArray;
 import static android.opengl.GLES20.glEnableVertexAttribArray;
+import static android.opengl.GLES20.glGenBuffers;
 import static android.opengl.GLES20.glUseProgram;
 import static com.android.blendershape3.util.Constants.BYTES_PER_FLOAT;
 
@@ -29,10 +36,10 @@ public class Shape {
     private float[] modelMatrix = new float[16];
     private float[] mvMatrix = new float[16];
     private float[] mvpMatrix = new float[16];
-    private float[] temporaryMatrix=new float[16];
+    private float[] temporaryMatrix = new float[16];
 
-    private final FloatBuffer vertexBuffer;
-    private final FloatBuffer normalsBuffer;
+    private FloatBuffer vertexBuffer;
+    private FloatBuffer normalsBuffer;
 
     private List<String> sourceVertexList;
     private List<String> sourceNormalList;
@@ -49,8 +56,11 @@ public class Shape {
     private int aPositionLocation;
     private int aNormalLocation;
 
-    public Shape(Context context){
-        this.context=context;
+    private int vertexVBOIndex;
+    private int normalsVBOIndex;
+
+    public Shape(Context context) {
+        this.context = context;
 
         sourceVertexList = new ArrayList<>();
         sourceNormalList = new ArrayList<>();
@@ -62,7 +72,7 @@ public class Shape {
 
         //Scan the .obj file
         try {
-            Scanner scanner = new Scanner(context.getAssets().open("TorusWithNormals.obj"));
+            Scanner scanner = new Scanner(context.getAssets().open("Handgun_Packed.obj"));
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 if (line.startsWith("v ")) {
@@ -141,12 +151,33 @@ public class Shape {
         }
         normalsBuffer.position(0);
 
-        shapeShaderProgram=new ShapeShaderProgram(context);
-        program=shapeShaderProgram.getProgram();
+        //create and bind VBOs
+        int[] buffers = new int[2];
+        glGenBuffers(2, buffers, 0);
+
+        glBindBuffer(GL_ARRAY_BUFFER,buffers[0]);
+        glBufferData(GL_ARRAY_BUFFER,vertexBuffer.capacity()*BYTES_PER_FLOAT,vertexBuffer,GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER,buffers[1]);
+        glBufferData(GL_ARRAY_BUFFER,normalsBuffer.capacity()*BYTES_PER_FLOAT,normalsBuffer,GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER,0);
+
+        vertexVBOIndex=buffers[0];
+        normalsVBOIndex=buffers[1];
+
+        //removing buffers from native memory
+        vertexBuffer.limit(0);
+        vertexBuffer=null;
+        normalsBuffer.limit(0);
+        normalsBuffer=null;
+
+        shapeShaderProgram = new ShapeShaderProgram(context);
+        program = shapeShaderProgram.getProgram();
 
     }
 
-    public void draw(float[] viewMatrix, float[] projectionMatrix, float[] rotation){
+    public void draw(float[] viewMatrix, float[] projectionMatrix, float[] rotation) {
         glUseProgram(program);
 
 
@@ -168,18 +199,26 @@ public class Shape {
         // (which now contains model * view * projection).
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvMatrix, 0);
 
-        shapeShaderProgram.setUniforms(mvMatrix,mvpMatrix);
+        shapeShaderProgram.setUniforms(mvMatrix, mvpMatrix);
 
-        aPositionLocation=shapeShaderProgram.getaPositionLocation();
-        aNormalLocation=shapeShaderProgram.getaNormalPosition();
+        aPositionLocation = shapeShaderProgram.getaPositionLocation();
+        aNormalLocation = shapeShaderProgram.getaNormalPosition();
 
-        GLES20.glVertexAttribPointer(aPositionLocation,3,GL_FLOAT,false,0,vertexBuffer);
+//        vertexBuffer.position(0);
+        glBindBuffer(GL_ARRAY_BUFFER,vertexVBOIndex);
         GLES20.glEnableVertexAttribArray(aPositionLocation);
+        GLES20.glVertexAttribPointer(aPositionLocation, 3, GL_FLOAT, false, 0, 0);
 
-        GLES20.glVertexAttribPointer(aNormalLocation,3,GL_FLOAT,false,0,normalsBuffer);
+
+//        normalsBuffer.position(0);
+        glBindBuffer(GL_ARRAY_BUFFER,normalsVBOIndex);
         glEnableVertexAttribArray(aNormalLocation);
+        GLES20.glVertexAttribPointer(aNormalLocation, 3, GL_FLOAT, false, 0, 0);
 
-        GLES20.glDrawArrays(GL_TRIANGLES,0,sourceFacesAndNormalsList.size()*3);
+        glBindBuffer(GL_ARRAY_BUFFER,0);
+
+//        GLES20.glDrawArrays(GL_POINTS,0,sourceFacesAndNormalsList.size()*3);
+        GLES20.glDrawArrays(GL_TRIANGLES, 0, sourceFacesAndNormalsList.size() * 3);
 
         glDisableVertexAttribArray(aPositionLocation);
         glDisableVertexAttribArray(aNormalLocation);
