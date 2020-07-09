@@ -14,10 +14,7 @@ void main() {
     v_Position = vec3(u_MVMatrix * a_Position);
     v_Normal = vec3(u_MVMatrix * vec4(a_Normal, 0.0));
 
-
-
-
+    gl_PointSize=3.0;
     gl_Position = u_MVPMatrix * a_Position;
-
 
 }

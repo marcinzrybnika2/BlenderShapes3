@@ -78,6 +78,8 @@ public class BSRenderer implements GLSurfaceView.Renderer {
      */
     private final float[] temporaryMatrix = new float[16];
 
+    private float[] lightPosition;
+
     public BSRenderer(MainActivity activity, ErrorHandler errorHandler) {
 //        this.context = context;
             this.mainActivity=activity;
@@ -97,7 +99,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         // Position the eye in front of the origin.
         final float eyeX = 0.0f;
         final float eyeY = 0.0f;
-        final float eyeZ = 0.5f;
+        final float eyeZ =0.5f;
 
         // We are looking toward the distance
         final float lookX = 0.0f;
@@ -122,6 +124,9 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
 //        table = new AirHockeyTable(mainActivity);
 //        torus2=new Torus2(mainActivity);
+        lightPosition=new float[]{
+            1.0f, 1.0f, 1.0f
+        };
         shape=new Shape(mainActivity);
     }
 
@@ -141,7 +146,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         final float bottom = -1.0f;
         final float top = 1.0f;
         final float near = 1.0f;
-        final float far = 10.0f;
+        final float far = 1000.0f;
 
         Matrix.frustumM(projectionMatrix, 0, left, right, bottom, top, near, far);
 
@@ -169,7 +174,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
 //        table.draw();
 //        torus2.draw(viewMatrix,projectionMatrix,accumulatedRotation);
-        shape.draw(viewMatrix,projectionMatrix,accumulatedRotation);
+        shape.draw(viewMatrix,projectionMatrix,accumulatedRotation, lightPosition);
 
     }
 }

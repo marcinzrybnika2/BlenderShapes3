@@ -1,9 +1,14 @@
 package com.android.blendershape3.shapes;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Color;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 
+import androidx.core.content.res.ResourcesCompat;
+
+import com.android.blendershape3.R;
 import com.android.blendershape3.shaders.ShapeShaderProgram;
 
 import java.io.IOException;
@@ -38,6 +43,8 @@ public class Shape {
     private float[] mvpMatrix = new float[16];
     private float[] temporaryMatrix = new float[16];
 
+    private float[] shapeColor;
+
     private FloatBuffer vertexBuffer;
     private FloatBuffer normalsBuffer;
 
@@ -59,9 +66,21 @@ public class Shape {
     private int vertexVBOIndex;
     private int normalsVBOIndex;
 
+    /**
+     *
+     * @param context
+     */
     public Shape(Context context) {
         this.context = context;
 
+        //get desired color
+        int intColor = ResourcesCompat.getColor(context.getResources(), R.color.colorShape, null);
+        shapeColor = new float[]{Color.red(intColor)/(float)255,
+                Color.green(intColor)/(float)255,
+                Color.blue(intColor)/(float)255,
+                Color.alpha(intColor)/(float)255};
+
+        //build Data buffers
         sourceVertexList = new ArrayList<>();
         sourceNormalList = new ArrayList<>();
         sourceFacesAndNormalsList = new ArrayList<>();
@@ -72,7 +91,7 @@ public class Shape {
 
         //Scan the .obj file
         try {
-            Scanner scanner = new Scanner(context.getAssets().open("Handgun_Packed.obj"));
+            Scanner scanner = new Scanner(context.getAssets().open("Wolf.obj"));
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 if (line.startsWith("v ")) {
@@ -177,12 +196,12 @@ public class Shape {
 
     }
 
-    public void draw(float[] viewMatrix, float[] projectionMatrix, float[] rotation) {
+    public void draw(float[] viewMatrix, float[] projectionMatrix, float[] rotation, float[] lightPosition) {
         glUseProgram(program);
 
 
         Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.translateM(modelMatrix, 0, 0.0f, 0.0f, -2.5f);
+        Matrix.translateM(modelMatrix, 0, 0.0f, 0.0f, -1.25f);
         Matrix.rotateM(modelMatrix, 0, 30, 1.0f, 0.0f, 0.0f);
 
 
@@ -199,7 +218,7 @@ public class Shape {
         // (which now contains model * view * projection).
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvMatrix, 0);
 
-        shapeShaderProgram.setUniforms(mvMatrix, mvpMatrix);
+        shapeShaderProgram.setUniforms(mvMatrix, mvpMatrix,shapeColor, lightPosition);
 
         aPositionLocation = shapeShaderProgram.getaPositionLocation();
         aNormalLocation = shapeShaderProgram.getaNormalPosition();
