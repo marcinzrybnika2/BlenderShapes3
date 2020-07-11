@@ -10,6 +10,7 @@ import androidx.core.content.res.ResourcesCompat;
 
 import com.android.blendershape3.R;
 import com.android.blendershape3.shaders.ShapeShaderProgram;
+import com.android.blendershape3.util.ShapeHelper;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -67,7 +68,6 @@ public class Shape {
     private int normalsVBOIndex;
 
     /**
-     *
      * @param context
      */
     public Shape(Context context) {
@@ -75,10 +75,10 @@ public class Shape {
 
         //get desired color
         int intColor = ResourcesCompat.getColor(context.getResources(), R.color.colorShape, null);
-        shapeColor = new float[]{Color.red(intColor)/(float)255,
-                Color.green(intColor)/(float)255,
-                Color.blue(intColor)/(float)255,
-                Color.alpha(intColor)/(float)255};
+        shapeColor = new float[]{Color.red(intColor) / (float) 255,
+                Color.green(intColor) / (float) 255,
+                Color.blue(intColor) / (float) 255,
+                Color.alpha(intColor) / (float) 255};
 
         //build Data buffers
         sourceVertexList = new ArrayList<>();
@@ -87,11 +87,11 @@ public class Shape {
 
         outputVertexList = new ArrayList<>();
         outputNormalList = new ArrayList<>();
-        outputFacesList = new ArrayList<>();
+//        outputFacesList = new ArrayList<>();
 
         //Scan the .obj file
         try {
-            Scanner scanner = new Scanner(context.getAssets().open("Wolf.obj"));
+            Scanner scanner = new Scanner(context.getAssets().open("CubeWithNormals.obj"));
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 if (line.startsWith("v ")) {
@@ -107,6 +107,11 @@ public class Shape {
             e.printStackTrace();
         }
 
+        ShapeHelper sh = new ShapeHelper();
+        FloatBuffer[] buffers = sh.getFacesNormalsBuffers(sourceVertexList, sourceNormalList, sourceFacesAndNormalsList, POSITION_COMPONENT_COUNT, NORMALS_COMPONENT_COUNT);
+        vertexBuffer = buffers[0];
+        normalsBuffer = buffers[1];
+/*
         //układanie buforów
 
         for (String faceAndNormal : sourceFacesAndNormalsList) {
@@ -169,27 +174,28 @@ public class Shape {
             normalsBuffer.put(z);
         }
         normalsBuffer.position(0);
+*/
 
         //create and bind VBOs
-        int[] buffers = new int[2];
-        glGenBuffers(2, buffers, 0);
+        int[] bufferIndxs = new int[2];
+        glGenBuffers(2, bufferIndxs, 0);
 
-        glBindBuffer(GL_ARRAY_BUFFER,buffers[0]);
-        glBufferData(GL_ARRAY_BUFFER,vertexBuffer.capacity()*BYTES_PER_FLOAT,vertexBuffer,GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, bufferIndxs[0]);
+        glBufferData(GL_ARRAY_BUFFER, vertexBuffer.capacity() * BYTES_PER_FLOAT, vertexBuffer, GL_STATIC_DRAW);
 
-        glBindBuffer(GL_ARRAY_BUFFER,buffers[1]);
-        glBufferData(GL_ARRAY_BUFFER,normalsBuffer.capacity()*BYTES_PER_FLOAT,normalsBuffer,GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, bufferIndxs[1]);
+        glBufferData(GL_ARRAY_BUFFER, normalsBuffer.capacity() * BYTES_PER_FLOAT, normalsBuffer, GL_STATIC_DRAW);
 
-        glBindBuffer(GL_ARRAY_BUFFER,0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        vertexVBOIndex=buffers[0];
-        normalsVBOIndex=buffers[1];
+        vertexVBOIndex = bufferIndxs[0];
+        normalsVBOIndex = bufferIndxs[1];
 
         //removing buffers from native memory
         vertexBuffer.limit(0);
-        vertexBuffer=null;
+        vertexBuffer = null;
         normalsBuffer.limit(0);
-        normalsBuffer=null;
+        normalsBuffer = null;
 
         shapeShaderProgram = new ShapeShaderProgram(context);
         program = shapeShaderProgram.getProgram();
@@ -218,23 +224,23 @@ public class Shape {
         // (which now contains model * view * projection).
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvMatrix, 0);
 
-        shapeShaderProgram.setUniforms(mvMatrix, mvpMatrix,shapeColor, lightPosition);
+        shapeShaderProgram.setUniforms(mvMatrix, mvpMatrix, shapeColor, lightPosition);
 
         aPositionLocation = shapeShaderProgram.getaPositionLocation();
         aNormalLocation = shapeShaderProgram.getaNormalPosition();
 
 //        vertexBuffer.position(0);
-        glBindBuffer(GL_ARRAY_BUFFER,vertexVBOIndex);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexVBOIndex);
         GLES20.glEnableVertexAttribArray(aPositionLocation);
         GLES20.glVertexAttribPointer(aPositionLocation, 3, GL_FLOAT, false, 0, 0);
 
 
 //        normalsBuffer.position(0);
-        glBindBuffer(GL_ARRAY_BUFFER,normalsVBOIndex);
+        glBindBuffer(GL_ARRAY_BUFFER, normalsVBOIndex);
         glEnableVertexAttribArray(aNormalLocation);
         GLES20.glVertexAttribPointer(aNormalLocation, 3, GL_FLOAT, false, 0, 0);
 
-        glBindBuffer(GL_ARRAY_BUFFER,0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 //        GLES20.glDrawArrays(GL_POINTS,0,sourceFacesAndNormalsList.size()*3);
         GLES20.glDrawArrays(GL_TRIANGLES, 0, sourceFacesAndNormalsList.size() * 3);

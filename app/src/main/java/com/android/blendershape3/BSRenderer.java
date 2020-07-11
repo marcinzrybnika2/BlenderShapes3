@@ -99,7 +99,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         // Position the eye in front of the origin.
         final float eyeX = 0.0f;
         final float eyeY = 0.0f;
-        final float eyeZ =0.5f;
+        final float eyeZ = 2.0f;
 
         // We are looking toward the distance
         final float lookX = 0.0f;
@@ -125,7 +125,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 //        table = new AirHockeyTable(mainActivity);
 //        torus2=new Torus2(mainActivity);
         lightPosition=new float[]{
-            1.0f, 1.0f, 1.0f
+            1.0f, 1.0f, 1.0f, 1.0f
         };
         shape=new Shape(mainActivity);
     }
@@ -159,6 +159,9 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        float[] lightPosInEyeSpace=new float[4];
+        Matrix.multiplyMV(lightPosInEyeSpace,0,viewMatrix,0,lightPosition,0);
+
         // Set a matrix that contains the current rotation.
         Matrix.setIdentityM(currentRotation, 0);
         Matrix.rotateM(currentRotation, 0, deltaX, 0.0f, 1.0f, 0.0f);
@@ -174,7 +177,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
 //        table.draw();
 //        torus2.draw(viewMatrix,projectionMatrix,accumulatedRotation);
-        shape.draw(viewMatrix,projectionMatrix,accumulatedRotation, lightPosition);
+        shape.draw(viewMatrix,projectionMatrix,accumulatedRotation, lightPosInEyeSpace);
 
     }
 }
