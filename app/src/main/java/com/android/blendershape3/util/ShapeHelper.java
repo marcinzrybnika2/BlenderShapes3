@@ -147,7 +147,15 @@ public class ShapeHelper {
             outputNormalList.add(normalsList.get(normal3 - 1));
         }
 
-        //po oryginalnej liście vertexów można znaleźć wszystkie wystąpienia
+        //wynikowa lista normalnych, wzpenionzch zarami dla zbudowania przestrzeni
+        List<float[]> outputNormalListFloat=new ArrayList<>();
+        float[] zeroBuff=new float[3];
+        for(int i=0;i<outputNormalList.size();i++){
+            outputNormalListFloat.add(zeroBuff);
+        }
+
+
+        //po oryginalnej liście vertexów można znaleźć wszystkie wystąpienia danego Vertexu
         for (String vertex : vertexList) {
             normalsForAverage=new ArrayList<>();
             foundVericesIndices=new ArrayList<>();
@@ -155,39 +163,103 @@ public class ShapeHelper {
             for (int i=0;i<outputVertexList.size();i++) {
                 if (outputVertexList.get(i).equals(vertex)) {
                     //dodaj normalną do uśrednienia
+//                    String tmpNormal=outputNormalList.get(i);
                     normalsForAverage.add(outputNormalList.get(i));
+//                    Log.d(TAG,outputNormalList.get(i));
 
                     //dodaj index znalezionego Vertexu aby uśrednioną normalną wpisac do normalList w odpowiednim miejscu
                     foundVericesIndices.add(i);
 
                 }
-                //uśrednij normalne
-                String averageNormal;
-                //jeśli znaleziono więcej niż jedno wystąpienie vertexu
-                if(foundVericesIndices.size()>1){
-                    averageNormal=averageNormal(normalsForAverage);
+                //uśrednij wszystkie znalezione normalne
+                float[] averNormal=averageNormal(normalsForAverage);
 
                     //uzyskaną wartość zapisz do wszystkich pozycji z outputNormalList wskazywanych przez odnalezione vertexy
                     for(int j: foundVericesIndices ){
-                       outputNormalList.set(j,averageNormal);
+                       outputNormalListFloat.set(j,averNormal);
                     }
-                }
+
 
             }
         }
-        //tu trzeba parsować obydwie listy do buforów i je przypisać do resultBuffers
+        //outputNormalListFloat zawiera wszystkie normalne w postaci wektorów float[3] w kolejności
+        // zgodnej z outputNormalList i outputVertexList
 
+
+        //parsing vertices lines into floats
+        //Buffer containing all vertices in float coordinates
+        vertexBuffer = ByteBuffer.allocateDirect(outputVertexList.size() *
+                positionComponentCount * BYTES_PER_FLOAT).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        vertexBuffer.position(0);
+
+        for (String line : outputVertexList) {
+            String coords[] = line.split(" "); // Split by space. coords[0]="v"
+            float x = Float.parseFloat(coords[1]);
+            float y = Float.parseFloat(coords[2]);
+            float z = Float.parseFloat(coords[3]);
+
+            vertexBuffer.put(x);
+            vertexBuffer.put(y);
+            vertexBuffer.put(z);
+        }
+        vertexBuffer.position(0);
+
+        //przepisuję wszytkie wyliczone normalne do bufora wynikowego
+        //This buffer will contain all normal vectors in the same order as vertices (above)
+        normalsBuffer = ByteBuffer.allocateDirect(outputNormalList.size() *
+                normalComponentCount * BYTES_PER_FLOAT).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        normalsBuffer.position(0);
+
+        for(float[] normal: outputNormalListFloat){
+            normalsBuffer.put(normal);
+        }
+        normalsBuffer.position(0);
+
+        resultBuffers[0]=vertexBuffer;
+        resultBuffers[1]=normalsBuffer;
 
         return resultBuffers;
     }
 
-    private String averageNormal(List<String> normalsForAverage) {
 
-        for(String normal: normalsForAverage){
-            Log.d(TAG,normal);
+    /**
+     * Wylicza Wektor średni wszystkich wektorów podanych w postaci Listy Stringów
+     *
+     * @param normalsForAverage
+     * @return znormalizowany wektor uśredniony (wersor) w formacie float[]
+     */
+    private float[] averageNormal(List<String> normalsForAverage) {
+
+        List<float[]> listOfNormalsToAverage=new ArrayList<>();
+
+        for(String line: normalsForAverage){
+            float[] normalf=new float[3];
+            String[] normals = line.split(" ");  //normals[0]="vn"
+            normalf[0]=Float.parseFloat(normals[1]);
+            normalf[1]=Float.parseFloat(normals[2]);
+            normalf[2]=Float.parseFloat(normals[3]);
+            listOfNormalsToAverage.add(normalf);
         }
 
-    return "";
+        //sumowanie wektorów
+        float[] resultNormalF=new float[3];
+        for(float[] vector: listOfNormalsToAverage){
+            resultNormalF[0]+=vector[0];
+            resultNormalF[1]+=vector[1];
+            resultNormalF[2]+=vector[2];
+        }
+        resultNormalF[0]/=listOfNormalsToAverage.size();
+        resultNormalF[1]/=listOfNormalsToAverage.size();
+        resultNormalF[2]/=listOfNormalsToAverage.size();
+
+        //normalizacja wektora wynikowego
+        float length=(float)Math.sqrt((resultNormalF[0]*resultNormalF[0])+(resultNormalF[1]*resultNormalF[1])+(resultNormalF[2]*resultNormalF[2]));
+        resultNormalF[0]/=length;
+        resultNormalF[1]/=length;
+        resultNormalF[2]/=length;
+
+
+    return resultNormalF;
 
     }
 

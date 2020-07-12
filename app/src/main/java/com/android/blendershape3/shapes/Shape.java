@@ -91,7 +91,7 @@ public class Shape {
 
         //Scan the .obj file
         try {
-            Scanner scanner = new Scanner(context.getAssets().open("CubeWithNormals.obj"));
+            Scanner scanner = new Scanner(context.getAssets().open("TorusWithNormals.obj"));
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 if (line.startsWith("v ")) {
@@ -108,7 +108,7 @@ public class Shape {
         }
 
         ShapeHelper sh = new ShapeHelper();
-        FloatBuffer[] buffers = sh.getFacesNormalsBuffers(sourceVertexList, sourceNormalList, sourceFacesAndNormalsList, POSITION_COMPONENT_COUNT, NORMALS_COMPONENT_COUNT);
+        FloatBuffer[] buffers = sh.getVertexNormalsBuffers(sourceVertexList, sourceNormalList, sourceFacesAndNormalsList, POSITION_COMPONENT_COUNT, NORMALS_COMPONENT_COUNT);
         vertexBuffer = buffers[0];
         normalsBuffer = buffers[1];
 /*
