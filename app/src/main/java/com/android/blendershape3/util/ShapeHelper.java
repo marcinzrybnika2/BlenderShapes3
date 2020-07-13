@@ -114,7 +114,7 @@ public class ShapeHelper {
         outputNormalList = new ArrayList<>();
 //        outputFacesList = new ArrayList<>();
         List<String> normalsForAverage;
-        List<Integer> foundVericesIndices;
+        List<Integer> foundVerticesIndices;
 
         FloatBuffer[] resultBuffers = new FloatBuffer[2];
 
@@ -148,8 +148,8 @@ public class ShapeHelper {
         }
 
         //wynikowa lista normalnych, wzpenionzch zarami dla zbudowania przestrzeni
+        float[] zeroBuff=new float[1];
         List<float[]> outputNormalListFloat=new ArrayList<>();
-        float[] zeroBuff=new float[3];
         for(int i=0;i<outputNormalList.size();i++){
             outputNormalListFloat.add(zeroBuff);
         }
@@ -158,7 +158,7 @@ public class ShapeHelper {
         //po oryginalnej liście vertexów można znaleźć wszystkie wystąpienia danego Vertexu
         for (String vertex : vertexList) {
             normalsForAverage=new ArrayList<>();
-            foundVericesIndices=new ArrayList<>();
+            foundVerticesIndices=new ArrayList<>();
 
             for (int i=0;i<outputVertexList.size();i++) {
                 if (outputVertexList.get(i).equals(vertex)) {
@@ -168,14 +168,14 @@ public class ShapeHelper {
 //                    Log.d(TAG,outputNormalList.get(i));
 
                     //dodaj index znalezionego Vertexu aby uśrednioną normalną wpisac do normalList w odpowiednim miejscu
-                    foundVericesIndices.add(i);
+                    foundVerticesIndices.add(i);
 
                 }
                 //uśrednij wszystkie znalezione normalne
                 float[] averNormal=averageNormal(normalsForAverage);
 
                     //uzyskaną wartość zapisz do wszystkich pozycji z outputNormalList wskazywanych przez odnalezione vertexy
-                    for(int j: foundVericesIndices ){
+                    for(int j: foundVerticesIndices ){
                        outputNormalListFloat.set(j,averNormal);
                     }
 
@@ -218,6 +218,7 @@ public class ShapeHelper {
         resultBuffers[0]=vertexBuffer;
         resultBuffers[1]=normalsBuffer;
 
+        System.gc();
         return resultBuffers;
     }
 
@@ -258,7 +259,7 @@ public class ShapeHelper {
         resultNormalF[1]/=length;
         resultNormalF[2]/=length;
 
-
+    System.gc();
     return resultNormalF;
 
     }

@@ -1,3 +1,4 @@
+
 precision mediump float;
 uniform vec4 u_Color;
 uniform vec3 u_LightPosition;
