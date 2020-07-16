@@ -1,43 +1,49 @@
 package com.android.blendershape3.shapes;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Color;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
+import android.util.Log;
 
 import androidx.core.content.res.ResourcesCompat;
 
 import com.android.blendershape3.R;
 import com.android.blendershape3.shaders.ShapeShaderProgram;
-import com.android.blendershape3.util.ShapeHelper;
+import com.android.blendershape3.util.BlenderShapeFileReader;
+import com.android.blendershape3.util.BufferObject;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.ShortBuffer;
 import java.util.Scanner;
 
 import static android.opengl.GLES20.GL_ARRAY_BUFFER;
+import static android.opengl.GLES20.GL_ELEMENT_ARRAY_BUFFER;
 import static android.opengl.GLES20.GL_FLOAT;
-import static android.opengl.GLES20.GL_POINTS;
 import static android.opengl.GLES20.GL_STATIC_DRAW;
 import static android.opengl.GLES20.GL_TRIANGLES;
+import static android.opengl.GLES20.GL_UNSIGNED_SHORT;
 import static android.opengl.GLES20.glBindBuffer;
-import static android.opengl.GLES20.glBindTexture;
 import static android.opengl.GLES20.glBufferData;
 import static android.opengl.GLES20.glDisableVertexAttribArray;
+import static android.opengl.GLES20.glDrawArrays;
+import static android.opengl.GLES20.glDrawElements;
 import static android.opengl.GLES20.glEnableVertexAttribArray;
 import static android.opengl.GLES20.glGenBuffers;
 import static android.opengl.GLES20.glUseProgram;
 import static com.android.blendershape3.util.Constants.BYTES_PER_FLOAT;
+import static com.android.blendershape3.util.Constants.BYTES_PER_SHORT;
 
 public class Shape {
+    private static final String TAG = "Shape";
 
-    private static final int POSITION_COMPONENT_COUNT = 3;
-    private static final int NORMALS_COMPONENT_COUNT = 3;
+    public static final int VERTEX_NORMALS = 1;
+    public static final int FACES_NORMALS = 2;
+    private final int numberOfVertices;
+
+    private int numberOfFaces=0;
+    private final int numberOfBuffers;
 
     private float[] modelMatrix = new float[16];
     private float[] mvMatrix = new float[16];
@@ -48,30 +54,39 @@ public class Shape {
 
     private FloatBuffer vertexBuffer;
     private FloatBuffer normalsBuffer;
-
-    private List<String> sourceVertexList;
-    private List<String> sourceNormalList;
-    private List<String> sourceFacesAndNormalsList;
-
-    private List<String> outputVertexList;
-    private List<String> outputNormalList;
-    private List<String> outputFacesList;
+    private ShortBuffer facesBuffer;
 
     private ShapeShaderProgram shapeShaderProgram;
     private int program;
 
     private Context context;
+
     private int aPositionLocation;
     private int aNormalLocation;
 
     private int vertexVBOIndex;
     private int normalsVBOIndex;
+    private int facesVBOIndex;
+
+    private int mode;
 
     /**
      * @param context
+     * @param fileName original Blender *.obj file or recalculated *VN.obj file
      */
-    public Shape(Context context) {
+    public Shape(Context context, String fileName) {
         this.context = context;
+
+        //check file type
+        mode = getMode(fileName);
+        if (mode == 0) {
+            Log.e(TAG, "File: " + fileName + " is not valid Shape file");
+            try {
+                throw new Exception("File: " + fileName + " is not valid Shape file");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         //get desired color
         int intColor = ResourcesCompat.getColor(context.getResources(), R.color.colorShape, null);
@@ -80,129 +95,92 @@ public class Shape {
                 Color.blue(intColor) / (float) 255,
                 Color.alpha(intColor) / (float) 255};
 
-        //build Data buffers
-        sourceVertexList = new ArrayList<>();
-        sourceNormalList = new ArrayList<>();
-        sourceFacesAndNormalsList = new ArrayList<>();
+        BlenderShapeFileReader shapeReader = new BlenderShapeFileReader(context);
+//        shapeReader.writeShapeVNToFile("WolfNoCircle.obj");
 
-        outputVertexList = new ArrayList<>();
-        outputNormalList = new ArrayList<>();
-//        outputFacesList = new ArrayList<>();
+        BufferObject bufferObject = shapeReader.getBuffers(fileName, mode);
 
-        //Scan the .obj file
-        try {
-            Scanner scanner = new Scanner(context.getAssets().open("Ball.obj"));
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                if (line.startsWith("v ")) {
-                    sourceVertexList.add(line);
-                } else if (line.startsWith("vn")) {
-                    sourceNormalList.add(line);
-                } else if (line.startsWith("f ")) {
-                    sourceFacesAndNormalsList.add(line);
-                }
-            }
-            scanner.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        vertexBuffer = bufferObject.vertexBuffer;
+        normalsBuffer = bufferObject.normalBuffer;
+        facesBuffer = bufferObject.facesBuffer; //in FACES_NORMALS mode this is null
 
-        ShapeHelper sh = new ShapeHelper();
-        FloatBuffer[] buffers = sh.getFacesNormalsBuffers(sourceVertexList, sourceNormalList, sourceFacesAndNormalsList, POSITION_COMPONENT_COUNT, NORMALS_COMPONENT_COUNT);
-        vertexBuffer = buffers[0];
-        normalsBuffer = buffers[1];
-        System.gc();
-/*
-        //układanie buforów
-
-        for (String faceAndNormal : sourceFacesAndNormalsList) {
-            String combinedVI[] = faceAndNormal.split(" "); //combinedVI[0]="f"
-
-            //są 4 elementy: f 5//1 3//1 1//1
-            String complet1[] = combinedVI[1].split("//"); //returns 2 elements: complet1[0] is face vertex index
-            String complet2[] = combinedVI[2].split("//");    //and complet1[1] is normal index
-            String complet3[] = combinedVI[3].split("//");
-
-            int vertex1 = Integer.parseInt(complet1[0]);
-            int normal1 = Integer.parseInt(complet1[1]);
-            int vertex2 = Integer.parseInt(complet2[0]);
-            int normal2 = Integer.parseInt(complet2[1]);
-            int vertex3 = Integer.parseInt(complet3[0]);
-            int normal3 = Integer.parseInt(complet3[1]);
-
-            // each index is from 1, so decrease them by 1
-            outputVertexList.add(sourceVertexList.get(vertex1 - 1));
-            outputVertexList.add(sourceVertexList.get(vertex2 - 1));
-            outputVertexList.add(sourceVertexList.get(vertex3 - 1));
-
-            outputNormalList.add(sourceNormalList.get(normal1 - 1));
-            outputNormalList.add(sourceNormalList.get(normal2 - 1));
-            outputNormalList.add(sourceNormalList.get(normal3 - 1));
-        }
-
-        //parsing vertices lines into floats
-        //Buffer containing all vertices in float coordinates
-        vertexBuffer = ByteBuffer.allocateDirect(outputVertexList.size() *
-                POSITION_COMPONENT_COUNT * BYTES_PER_FLOAT).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        vertexBuffer.position(0);
-
-        for (String line : outputVertexList) {
-            String coords[] = line.split(" "); // Split by space. coords[0]="v"
-            float x = Float.parseFloat(coords[1]);
-            float y = Float.parseFloat(coords[2]);
-            float z = Float.parseFloat(coords[3]);
-
-            vertexBuffer.put(x);
-            vertexBuffer.put(y);
-            vertexBuffer.put(z);
-        }
-        vertexBuffer.position(0);
-
-        //parsing normals into floats
-        //This buffer will contain all normal vectors in the same order as vertices (above)
-        normalsBuffer = ByteBuffer.allocateDirect(outputNormalList.size() *
-                NORMALS_COMPONENT_COUNT * BYTES_PER_FLOAT).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        normalsBuffer.position(0);
-
-        for (String line : outputNormalList) {
-            String normals[] = line.split(" ");  //normals[0]="vn"
-            float x = Float.parseFloat(normals[1]);
-            float y = Float.parseFloat(normals[2]);
-            float z = Float.parseFloat(normals[3]);
-
-            normalsBuffer.put(x);
-            normalsBuffer.put(y);
-            normalsBuffer.put(z);
-        }
-        normalsBuffer.position(0);
-*/
 
         //create and bind VBOs
-        int[] bufferIndxs = new int[2];
-        glGenBuffers(2, bufferIndxs, 0);
+        if (mode == VERTEX_NORMALS) {
+            numberOfBuffers = 3;
+        } else {
+            numberOfBuffers = 2;
+        }
+        int[] bufferIndxs = new int[numberOfBuffers];
+        glGenBuffers(numberOfBuffers, bufferIndxs, 0);
 
         glBindBuffer(GL_ARRAY_BUFFER, bufferIndxs[0]);
         glBufferData(GL_ARRAY_BUFFER, vertexBuffer.capacity() * BYTES_PER_FLOAT, vertexBuffer, GL_STATIC_DRAW);
+        vertexVBOIndex = bufferIndxs[0];
+        numberOfVertices=vertexBuffer.capacity();
 
         glBindBuffer(GL_ARRAY_BUFFER, bufferIndxs[1]);
         glBufferData(GL_ARRAY_BUFFER, normalsBuffer.capacity() * BYTES_PER_FLOAT, normalsBuffer, GL_STATIC_DRAW);
+        normalsVBOIndex = bufferIndxs[1];
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        vertexVBOIndex = bufferIndxs[0];
-        normalsVBOIndex = bufferIndxs[1];
+        if (mode == VERTEX_NORMALS) {
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferIndxs[2]);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, facesBuffer.capacity() * BYTES_PER_SHORT, facesBuffer, GL_STATIC_DRAW);
+            facesVBOIndex = bufferIndxs[2];
+
+            numberOfFaces = facesBuffer.capacity();
+
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        }
 
         //removing buffers from native memory
         vertexBuffer.limit(0);
         vertexBuffer = null;
         normalsBuffer.limit(0);
         normalsBuffer = null;
-
+        if(mode==VERTEX_NORMALS) {
+            facesBuffer.limit(0);
+            facesBuffer = null;
+        }
+        //create shader program
         shapeShaderProgram = new ShapeShaderProgram(context);
         program = shapeShaderProgram.getProgram();
 
     }
 
+    /**
+     * Checks this file type.
+     *
+     * @param fileName
+     * @return FACES_NORMALS if this is *.obj file with faces normals.
+     * VERTEX_NORMALS if this is *VN.obj file with vertex normals.
+     */
+    private int getMode(String fileName) {
+        int result = 0;
+        try {
+            Scanner scanner = new Scanner(context.getAssets().open(fileName));
+            scanner.nextLine();
+            String line2 = scanner.nextLine();
+            if (line2.contains("# VN")) {
+                result = VERTEX_NORMALS;
+            } else if (line2.contains("# www.blender.org")) {
+                result = FACES_NORMALS;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+
+    /**
+     * @param viewMatrix
+     * @param projectionMatrix
+     * @param rotation
+     * @param lightPosition
+     */
     public void draw(float[] viewMatrix, float[] projectionMatrix, float[] rotation, float[] lightPosition) {
         glUseProgram(program);
 
@@ -243,9 +221,15 @@ public class Shape {
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-//        GLES20.glDrawArrays(GL_POINTS,0,sourceFacesAndNormalsList.size()*3);
-        GLES20.glDrawArrays(GL_TRIANGLES, 0, sourceFacesAndNormalsList.size() * 3);
+        if(mode==VERTEX_NORMALS) {
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, facesVBOIndex);
 
+            glDrawElements(GL_TRIANGLES, numberOfFaces, GL_UNSIGNED_SHORT, 0);
+
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        }else{ //FACES_NORMAL mode
+            glDrawArrays(GL_TRIANGLES,0,numberOfVertices);
+        }
         glDisableVertexAttribArray(aPositionLocation);
         glDisableVertexAttribArray(aNormalLocation);
 

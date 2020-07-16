@@ -26,7 +26,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
     Shape shape;
 
     /** References to other main objects. */
-    private final MainActivity mainActivity;
+    private final MainActivity context;
     private final ErrorHandler errorHandler;
 
     /** Retain the most recent delta for touch events. */
@@ -82,7 +82,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
     public BSRenderer(MainActivity activity, ErrorHandler errorHandler) {
 //        this.context = context;
-            this.mainActivity=activity;
+            this.context =activity;
             this.errorHandler=errorHandler;
     }
 
@@ -127,7 +127,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         lightPosition=new float[]{
             1.0f, 1.0f, 1.0f, 1.0f
         };
-        shape=new Shape(mainActivity);
+        shape=new Shape(context,"cue ball.obj");
     }
 
 
