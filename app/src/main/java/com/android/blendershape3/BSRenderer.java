@@ -78,7 +78,10 @@ public class BSRenderer implements GLSurfaceView.Renderer {
      */
     private final float[] temporaryMatrix = new float[16];
 
+    float[] lightPosInEyeSpace=new float[4];
+
     private float[] lightPosition;
+
 
     public BSRenderer(MainActivity activity, ErrorHandler errorHandler) {
 //        this.context = context;
@@ -127,7 +130,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         lightPosition=new float[]{
             1.0f, 1.0f, 1.0f, 1.0f
         };
-        shape=new Shape(context,"cue ball.obj");
+        shape=new Shape(context,"BallVN.obj");
     }
 
 
@@ -159,7 +162,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        float[] lightPosInEyeSpace=new float[4];
+
         Matrix.multiplyMV(lightPosInEyeSpace,0,viewMatrix,0,lightPosition,0);
 
         // Set a matrix that contains the current rotation.
@@ -174,10 +177,27 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         System.arraycopy(temporaryMatrix, 0, accumulatedRotation, 0, 16);
 
 
+        //model Matrix for shape
+        Matrix.setIdentityM(modelMatrix, 0);
+        Matrix.translateM(modelMatrix, 0, 0.0f, 0.0f, -1.25f);
+        Matrix.rotateM(modelMatrix, 0, 30, 1.0f, 0.0f, 0.0f);
 
-//        table.draw();
-//        torus2.draw(viewMatrix,projectionMatrix,accumulatedRotation);
-        shape.draw(viewMatrix,projectionMatrix,accumulatedRotation, lightPosInEyeSpace);
+
+        // Rotate the shape taking the overall rotation into account.
+        Matrix.multiplyMM(temporaryMatrix, 0, modelMatrix, 0, accumulatedRotation, 0);
+        System.arraycopy(temporaryMatrix, 0, modelMatrix, 0, 16);
+
+        // This multiplies the view matrix by the model matrix, and stores
+        // the result in the MV matrix
+        Matrix.multiplyMM(mvMatrix, 0, viewMatrix, 0, modelMatrix, 0);
+
+        // This multiplies the modelview matrix by the projection matrix,
+        // and stores the result in the MVP matrix
+        Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvMatrix, 0);
+
+
+
+        shape.draw(mvMatrix,mvpMatrix, lightPosInEyeSpace);
 
     }
 }

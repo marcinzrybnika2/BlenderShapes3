@@ -178,32 +178,13 @@ public class Shape {
     /**
      * @param viewMatrix
      * @param projectionMatrix
-     * @param rotation
      * @param lightPosition
      */
-    public void draw(float[] viewMatrix, float[] projectionMatrix, float[] rotation, float[] lightPosition) {
+    public void draw(float[] viewMatrix, float[] projectionMatrix,  float[] lightPosition) {
         glUseProgram(program);
 
 
-        Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.translateM(modelMatrix, 0, 0.0f, 0.0f, -1.25f);
-        Matrix.rotateM(modelMatrix, 0, 30, 1.0f, 0.0f, 0.0f);
-
-
-        // Rotate the cube taking the overall rotation into account.
-        Matrix.multiplyMM(temporaryMatrix, 0, modelMatrix, 0, rotation, 0);
-        System.arraycopy(temporaryMatrix, 0, modelMatrix, 0, 16);
-
-        // This multiplies the view matrix by the model matrix, and stores
-        // the result in the MV matrix
-        Matrix.multiplyMM(mvMatrix, 0, viewMatrix, 0, modelMatrix, 0);
-
-        // This multiplies the modelview matrix by the projection matrix,
-        // and stores the result in the MVP matrix
-        // (which now contains model * view * projection).
-        Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvMatrix, 0);
-
-        shapeShaderProgram.setUniforms(mvMatrix, mvpMatrix, shapeColor, lightPosition);
+        shapeShaderProgram.setUniforms(viewMatrix, projectionMatrix, shapeColor, lightPosition);
 
         aPositionLocation = shapeShaderProgram.getaPositionLocation();
         aNormalLocation = shapeShaderProgram.getaNormalPosition();
