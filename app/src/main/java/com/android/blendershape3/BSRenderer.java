@@ -4,9 +4,8 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 
-import com.android.blendershape3.shapes.AirHockeyTable;
-import com.android.blendershape3.shapes.Shape;
-import com.android.blendershape3.shapes.Torus2;
+import com.android.blendershape3.shapes.LightSource;
+import com.android.blendershape3.shapes.ObjShape;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -21,10 +20,10 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
     private static final String TAG="BSRenderer";
 
-    AirHockeyTable table;
+ /*   AirHockeyTable table;
     Torus2 torus2;
     Shape shape;
-
+*/
     /** References to other main objects. */
     private final MainActivity context;
     private final ErrorHandler errorHandler;
@@ -80,11 +79,17 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
     float[] lightPosInEyeSpace=new float[4];
 
+
     private float[] lightPosition;
+    private ObjShape objShape;
+    private long savedTime;
+
+    private LightSource lightSource;
+
 
 
     public BSRenderer(MainActivity activity, ErrorHandler errorHandler) {
-//        this.context = context;
+
             this.context =activity;
             this.errorHandler=errorHandler;
     }
@@ -102,12 +107,12 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         // Position the eye in front of the origin.
         final float eyeX = 0.0f;
         final float eyeY = 0.0f;
-        final float eyeZ = 2.0f;
+        final float eyeZ = 1.5f;
 
         // We are looking toward the distance
         final float lookX = 0.0f;
         final float lookY = 0.0f;
-        final float lookZ = -1.0f;
+        final float lookZ = 0.0f;
 
         // Set our up vector. This is where our head would be pointing were we
         // holding the camera.
@@ -128,9 +133,13 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 //        table = new AirHockeyTable(mainActivity);
 //        torus2=new Torus2(mainActivity);
         lightPosition=new float[]{
-            1.0f, 1.0f, 1.0f, 1.0f
+            1.2f, 1.0f, 2.0f, 1.0f
         };
-        shape=new Shape(context,"BallVN.obj");
+        lightSource=new LightSource(context,"Ball.obj",R.color.colorLightSource,lightPosition);
+
+        objShape=new ObjShape(context,"TexCube.obj",R.drawable.wood_texture);
+//        shape=new Shape(context,"TorusVN.obj");
+//        savedTime=System.currentTimeMillis();
     }
 
 
@@ -162,8 +171,19 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        //light source
+        Matrix.setIdentityM(modelMatrix,0);
+        Matrix.translateM(modelMatrix,0,lightPosition[0],lightPosition[1],lightPosition[2]);
+        Matrix.scaleM(modelMatrix,0,0.1f,0.1f,0.1f);
 
+        Matrix.multiplyMM(mvMatrix,0,viewMatrix,0,modelMatrix,0);
+        Matrix.multiplyMM(mvpMatrix,0,projectionMatrix,0,mvMatrix,0);
+//        draw light source
+        lightSource.draw(mvpMatrix);
+
+        //light source position passed to shape(draw)
         Matrix.multiplyMV(lightPosInEyeSpace,0,viewMatrix,0,lightPosition,0);
+//        Matrix.multiplyMV(lightPositionInProjectionSpace,0,projectionMatrix,0,lightPosInEyeSpace,0);
 
         // Set a matrix that contains the current rotation.
         Matrix.setIdentityM(currentRotation, 0);
@@ -179,13 +199,14 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
         //model Matrix for shape
         Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.translateM(modelMatrix, 0, 0.0f, 0.0f, -1.25f);
+        Matrix.translateM(modelMatrix, 0, 0.0f, 0.0f, -2.25f);
         Matrix.rotateM(modelMatrix, 0, 30, 1.0f, 0.0f, 0.0f);
 
 
         // Rotate the shape taking the overall rotation into account.
         Matrix.multiplyMM(temporaryMatrix, 0, modelMatrix, 0, accumulatedRotation, 0);
         System.arraycopy(temporaryMatrix, 0, modelMatrix, 0, 16);
+
 
         // This multiplies the view matrix by the model matrix, and stores
         // the result in the MV matrix
@@ -197,7 +218,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
 
 
-        shape.draw(mvMatrix,mvpMatrix, lightPosInEyeSpace);
+        objShape.draw(mvMatrix,mvpMatrix, lightPosInEyeSpace,lightSource.getLight());
 
     }
 }

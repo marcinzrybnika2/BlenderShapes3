@@ -105,6 +105,15 @@ public class ShaderHelper {
         glGetProgramiv(programObjectID,GL_VALIDATE_STATUS,validateStatus,0);
         Log.v(TAG,"Result of validating program: "+validateStatus[0] +"\n"
                 +"LOG:"+glGetProgramInfoLog(programObjectID));
+        if(validateStatus[0]!=1){
+            System.exit(1);
+            try {
+                throw new Exception("Shader program not compiled");
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return validateStatus[0] !=0;
     }
 
