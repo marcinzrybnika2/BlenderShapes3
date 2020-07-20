@@ -3,7 +3,6 @@ package com.android.blendershape3.shapes;
 import android.content.Context;
 import android.graphics.Color;
 import android.opengl.GLES20;
-import android.opengl.Matrix;
 import android.util.Log;
 
 import androidx.core.content.res.ResourcesCompat;
@@ -12,6 +11,8 @@ import com.android.blendershape3.R;
 import com.android.blendershape3.shaders.ShapeShaderProgram;
 import com.android.blendershape3.util.BlenderShapeFileReader;
 import com.android.blendershape3.util.BufferObject;
+import com.android.blendershape3.util.Light;
+import com.android.blendershape3.util.Material;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
@@ -41,6 +42,7 @@ public class Shape {
     public static final int VERTEX_NORMALS = 1;
     public static final int FACES_NORMALS = 2;
     private final int numberOfVertices;
+    private final Material material;
 
     private int numberOfFaces=0;
     private final int numberOfBuffers;
@@ -57,7 +59,7 @@ public class Shape {
     private ShortBuffer facesBuffer;
 
     private ShapeShaderProgram shapeShaderProgram;
-    private int program;
+
 
     private Context context;
 
@@ -146,7 +148,13 @@ public class Shape {
         }
         //create shader program
         shapeShaderProgram = new ShapeShaderProgram(context);
-        program = shapeShaderProgram.getProgram();
+
+        //create Material
+        float[] ambient=new float[]{1.0f,0.5f,0.31f};
+        float[] diffuse=new float[]{1.0f,0.5f,0.31f};
+        float[] specular=new float[]{0.5f,0.5f,0.5f};
+        float shininess=32.0f;
+        material=new Material(ambient,diffuse,specular,shininess);
 
     }
 
@@ -178,21 +186,22 @@ public class Shape {
     /**
      * @param viewMatrix
      * @param projectionMatrix
-     * @param lightPosition
+     * @param lightPositionInEyeSpace
      */
-    public void draw(float[] viewMatrix, float[] projectionMatrix,  float[] lightPosition) {
-        glUseProgram(program);
+    public void draw(float[] viewMatrix, float[] projectionMatrix, float[] lightPositionInEyeSpace, Light light) {
+       shapeShaderProgram.useProgram();
 
 
-        shapeShaderProgram.setUniforms(viewMatrix, projectionMatrix, shapeColor, lightPosition);
+        shapeShaderProgram.setUniforms(viewMatrix, projectionMatrix, light,0,material);
 
         aPositionLocation = shapeShaderProgram.getaPositionLocation();
-        aNormalLocation = shapeShaderProgram.getaNormalPosition();
+        aNormalLocation = shapeShaderProgram.getaNormalLocation();
 
 //        vertexBuffer.position(0);
         glBindBuffer(GL_ARRAY_BUFFER, vertexVBOIndex);
         GLES20.glEnableVertexAttribArray(aPositionLocation);
         GLES20.glVertexAttribPointer(aPositionLocation, 3, GL_FLOAT, false, 0, 0);
+
 
 
 //        normalsBuffer.position(0);

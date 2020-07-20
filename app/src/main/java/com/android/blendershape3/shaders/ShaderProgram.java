@@ -19,14 +19,29 @@ public class ShaderProgram {
 
     protected static final String U_TEXTURE_UNIT = "u_TextureUnit";
     protected static final String U_COLOR="u_Color";
+    protected static final String U_LIGHT_COLOR="u_LightColor";
     protected static final String U_VECTOR_TO_LIGHT="u_VectorToLight";
     protected static final String U_LIGHT_POSITION="u_LightPosition";
+
+    protected static final String MATERIAL_AMBIENT="material.ambient";
+    protected static final String MATERIAL_DIFFUSE="material.diffuse";
+    protected static final String MATERIAL_SPECULAR="material.specular";
+    protected static final String MATERIAL_SHININESS="material.shininess";
+
+    protected static final String LIGHT_POSITION="light.position";
+    protected static final String LIGHT_AMBIENT="light.ambient";
+    protected static final String LIGHT_DIFFUSE="light.diffuse";
+    protected static final String LIGHT_SPECULAR="light.specular";
+
 
     //Attribute constants
     protected static final String A_POSITION = "a_Position";
     protected static final String A_COLOR = "a_Color";
     protected static final String A_NORMAL="a_Normal";
-    protected static final String A_TEXTURE_COORDINATES = "a_TextureCoordinates";
+    protected static final String A_TEXTURE_COORDINATES = "a_TexCoord";
+
+
+
     //Shader program
     protected final int program;
 
@@ -49,6 +64,8 @@ public class ShaderProgram {
         //Set the current OpenGL shader program to this program.
         glUseProgram(program);
     }
+
+
 
 
 }
