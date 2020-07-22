@@ -78,7 +78,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
     private final float[] temporaryMatrix = new float[16];
 
     float[] lightPosInEyeSpace=new float[4];
-
+    private float[] lightPositionInProjectionSpace=new float[4];
 
     private float[] lightPosition;
     private ObjShape objShape;
@@ -89,7 +89,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
 
     public BSRenderer(MainActivity activity, ErrorHandler errorHandler) {
-
+//        this.context = context;
             this.context =activity;
             this.errorHandler=errorHandler;
     }
@@ -107,7 +107,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         // Position the eye in front of the origin.
         final float eyeX = 0.0f;
         final float eyeY = 0.0f;
-        final float eyeZ = 1.5f;
+        final float eyeZ = 0.5f;
 
         // We are looking toward the distance
         final float lookX = 0.0f;
@@ -137,7 +137,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         };
         lightSource=new LightSource(context,"Ball.obj",R.color.colorLightSource,lightPosition);
 
-        objShape=new ObjShape(context,"TexCube.obj",R.drawable.wood_texture);
+        objShape=new ObjShape(context,"Celticpub.obj",R.drawable.wood_texture);
 //        shape=new Shape(context,"TorusVN.obj");
 //        savedTime=System.currentTimeMillis();
     }
@@ -199,7 +199,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
         //model Matrix for shape
         Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.translateM(modelMatrix, 0, 0.0f, 0.0f, -2.25f);
+        Matrix.translateM(modelMatrix, 0, -2.5f, 0.0f, -2.25f);
         Matrix.rotateM(modelMatrix, 0, 30, 1.0f, 0.0f, 0.0f);
 
 
