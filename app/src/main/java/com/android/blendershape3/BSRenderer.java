@@ -106,8 +106,8 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
         // Position the eye in front of the origin.
         final float eyeX = 0.0f;
-        final float eyeY = 0.0f;
-        final float eyeZ = 0.5f;
+        final float eyeY = 0.5f;
+        final float eyeZ = 3.5f;
 
         // We are looking toward the distance
         final float lookX = 0.0f;
@@ -133,11 +133,15 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 //        table = new AirHockeyTable(mainActivity);
 //        torus2=new Torus2(mainActivity);
         lightPosition=new float[]{
-            1.2f, 1.0f, 2.0f, 1.0f
+            1.0f, 1.0f, 1.0f, 1.0f
         };
-        lightSource=new LightSource(context,"Ball.obj",R.color.colorLightSource,lightPosition);
+        //light source position passed to shape(draw)
+        Matrix.multiplyMV(lightPosInEyeSpace,0,viewMatrix,0,lightPosition,0);
 
-        objShape=new ObjShape(context,"Celticpub.obj",R.drawable.wood_texture);
+
+        lightSource=new LightSource(context,"Ball.obj",R.color.colorLightSource,lightPosition,lightPosInEyeSpace);
+
+        objShape=new ObjShape(context,"TexCube.obj",R.drawable.wood_texture);
 //        shape=new Shape(context,"TorusVN.obj");
 //        savedTime=System.currentTimeMillis();
     }
@@ -172,8 +176,10 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //light source
+        float[] lp=lightSource.getPositionWorld();
+
         Matrix.setIdentityM(modelMatrix,0);
-        Matrix.translateM(modelMatrix,0,lightPosition[0],lightPosition[1],lightPosition[2]);
+        Matrix.translateM(modelMatrix,0,lp[0],lp[1],lp[2]);
         Matrix.scaleM(modelMatrix,0,0.1f,0.1f,0.1f);
 
         Matrix.multiplyMM(mvMatrix,0,viewMatrix,0,modelMatrix,0);
@@ -182,8 +188,8 @@ public class BSRenderer implements GLSurfaceView.Renderer {
         lightSource.draw(mvpMatrix);
 
         //light source position passed to shape(draw)
-        Matrix.multiplyMV(lightPosInEyeSpace,0,viewMatrix,0,lightPosition,0);
-//        Matrix.multiplyMV(lightPositionInProjectionSpace,0,projectionMatrix,0,lightPosInEyeSpace,0);
+//        Matrix.multiplyMV(lightPosInEyeSpace,0,viewMatrix,0,lp,0);
+
 
         // Set a matrix that contains the current rotation.
         Matrix.setIdentityM(currentRotation, 0);
@@ -199,8 +205,8 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
         //model Matrix for shape
         Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.translateM(modelMatrix, 0, -2.5f, 0.0f, -2.25f);
-        Matrix.rotateM(modelMatrix, 0, 30, 1.0f, 0.0f, 0.0f);
+        Matrix.translateM(modelMatrix, 0, 0.0f, 0.0f, 0.0f);
+        Matrix.rotateM(modelMatrix, 0, 0, 1.0f, 0.0f, 0.0f);
 
 
         // Rotate the shape taking the overall rotation into account.
@@ -218,7 +224,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
 
 
-        objShape.draw(mvMatrix,mvpMatrix, lightPosInEyeSpace,lightSource.getLight());
+        objShape.draw(mvMatrix,mvpMatrix, lightSource.getLight());
 
     }
 }

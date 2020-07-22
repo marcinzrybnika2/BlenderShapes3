@@ -56,16 +56,21 @@ public class LightSource {
     private int colorId;
 
     private float[] lightColor;
-    private float[] position;
+
+
+
+    private float[] positionWorld;
+    private float[] positionEye;
 
     private Obj obj;
 
 
-    public LightSource(Context context, String shape, int colorId, float[] position){
+    public LightSource(Context context, String shape, int colorId, float[] positionWorld, float[] positionEye){
         this.context=context;
         this.shape=shape;
         this.colorId=colorId;
-        this.position=position;
+        this.positionWorld = positionWorld;
+        this.positionEye = positionEye;
 
 
         //get desired color
@@ -117,7 +122,7 @@ public class LightSource {
 
 
         //light parameters
-        ambientPar=0.2f;
+        ambientPar=0.1f;
         diffusePar=0.5f;
         specularPar=1.0f;
 
@@ -125,7 +130,7 @@ public class LightSource {
         float[] diffuse=new float[]{lightColor[0]*diffusePar,lightColor[1]*diffusePar,lightColor[2]*diffusePar};
         float[] specular=new float[]{lightColor[0]*specularPar,lightColor[1]*specularPar,lightColor[2]*specularPar};
 
-        light=new Light(position,ambient,diffuse,specular);
+        light=new Light(this.positionWorld,this.positionEye,ambient,diffuse,specular);
 
 
         //create shader program
@@ -138,15 +143,15 @@ public class LightSource {
         return this.light;
     }
 
-//    public float[] getColor(){
-//        return this.lightColor;
-//    }
 
+    public float[] getPositionWorld() {
+        return positionWorld;
+    }
 
-    public void draw(float[] projectionMatrix){
+    public void draw(float[] mvpMatrix){
         lightShaderProgram.useProgram();
 
-        lightShaderProgram.setUniforms(projectionMatrix, this.lightColor);
+        lightShaderProgram.setUniforms(mvpMatrix, this.lightColor);
 
         glBindBuffer(GL_ARRAY_BUFFER, vertexVBOIndex);
         glEnableVertexAttribArray(lightShaderProgram.getaPositionLocation());

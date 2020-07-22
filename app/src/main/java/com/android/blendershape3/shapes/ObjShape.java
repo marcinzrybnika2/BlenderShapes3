@@ -10,6 +10,7 @@ import com.android.blendershape3.R;
 import com.android.blendershape3.shaders.ShapeShaderProgram;
 import com.android.blendershape3.util.Light;
 import com.android.blendershape3.util.Material;
+import com.android.blendershape3.util.MaterialTex;
 import com.android.blendershape3.util.TextureHelper;
 
 import java.io.IOException;
@@ -54,7 +55,7 @@ public class ObjShape {
     private final int textureDataHandle;
 
     private final ShapeShaderProgram shapeShaderProgram;
-    private final Material material;
+    private final MaterialTex material;
 
 
     private InputStream objInputStream;
@@ -152,17 +153,17 @@ public class ObjShape {
         float[] diffuse=new float[]{1.0f,0.5f,0.31f};
         float[] specular=new float[]{0.5f,0.5f,0.5f};
         float shininess=32.0f;
-        material=new Material(ambient,diffuse,specular,shininess);
+        material=new MaterialTex(0,specular,shininess);
 
     }
 
-    public void draw(float[] viewMatrix, float[] projectionMatrix, float[] lightPositionInEyeSpace, Light light) {
+    public void draw(float[] viewMatrix, float[] projectionMatrix,  Light light) {
 
 
        shapeShaderProgram.useProgram();
 
 
-        shapeShaderProgram.setUniforms(viewMatrix, projectionMatrix, light,0,material);
+        shapeShaderProgram.setUniforms(viewMatrix, projectionMatrix, light,material);
 
         aPositionLocation = shapeShaderProgram.getaPositionLocation();
         aNormalLocation = shapeShaderProgram.getaNormalLocation();

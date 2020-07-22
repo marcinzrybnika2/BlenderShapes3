@@ -28,7 +28,8 @@ public class ShaderProgram {
     protected static final String MATERIAL_SPECULAR="material.specular";
     protected static final String MATERIAL_SHININESS="material.shininess";
 
-    protected static final String LIGHT_POSITION="light.position";
+    protected static final String LIGHT_POSITION_WORLD="light.positionWorld";
+    protected static final String LIGHT_POSITION_EYE="light.positionEye";
     protected static final String LIGHT_AMBIENT="light.ambient";
     protected static final String LIGHT_DIFFUSE="light.diffuse";
     protected static final String LIGHT_SPECULAR="light.specular";
@@ -44,6 +45,7 @@ public class ShaderProgram {
 
     //Shader program
     protected final int program;
+
 
     /**Superclass for all shader programs
      *

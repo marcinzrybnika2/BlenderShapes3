@@ -13,6 +13,7 @@ import com.android.blendershape3.util.BlenderShapeFileReader;
 import com.android.blendershape3.util.BufferObject;
 import com.android.blendershape3.util.Light;
 import com.android.blendershape3.util.Material;
+import com.android.blendershape3.util.MaterialTex;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
@@ -42,7 +43,7 @@ public class Shape {
     public static final int VERTEX_NORMALS = 1;
     public static final int FACES_NORMALS = 2;
     private final int numberOfVertices;
-    private final Material material;
+    private final MaterialTex material;
 
     private int numberOfFaces=0;
     private final int numberOfBuffers;
@@ -154,7 +155,7 @@ public class Shape {
         float[] diffuse=new float[]{1.0f,0.5f,0.31f};
         float[] specular=new float[]{0.5f,0.5f,0.5f};
         float shininess=32.0f;
-        material=new Material(ambient,diffuse,specular,shininess);
+        material=new MaterialTex(0,specular,shininess);
 
     }
 
@@ -192,7 +193,7 @@ public class Shape {
        shapeShaderProgram.useProgram();
 
 
-        shapeShaderProgram.setUniforms(viewMatrix, projectionMatrix, light,0,material);
+        shapeShaderProgram.setUniforms(viewMatrix, projectionMatrix, light,material);
 
         aPositionLocation = shapeShaderProgram.getaPositionLocation();
         aNormalLocation = shapeShaderProgram.getaNormalLocation();

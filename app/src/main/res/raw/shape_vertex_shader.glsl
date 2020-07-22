@@ -15,7 +15,9 @@ varying vec3 v_Normal;
 varying vec2 v_TexCoord;
 
 
+
 void main() {
+
 
     v_Position = vec3(u_MVMatrix * a_Position);
     v_Normal = vec3(u_MVMatrix * vec4(a_Normal, 0.0));

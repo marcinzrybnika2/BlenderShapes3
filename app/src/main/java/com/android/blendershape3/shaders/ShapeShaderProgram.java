@@ -5,7 +5,6 @@ import android.opengl.GLES20;
 
 import com.android.blendershape3.R;
 import com.android.blendershape3.util.Light;
-import com.android.blendershape3.util.Material;
 import com.android.blendershape3.util.MaterialTex;
 
 import static android.opengl.GLES20.glGetUniformLocation;
@@ -30,10 +29,11 @@ public class ShapeShaderProgram extends ShaderProgram {
     private final int uMaterialSpecularLoc;
     private final int uMaterialShininessLoc;
 
-    private final int uLightPositionLoc;
+//    private final int uLightPositionWorldLoc;
     private final int uLightAmbientLoc;
     private final int uLightDiffuseLoc;
     private final int uLightSpecularLoc;
+    private final int uLightPositionEyeLoc;
 
     /**
      * Superclass for all shader programs
@@ -57,27 +57,29 @@ public class ShapeShaderProgram extends ShaderProgram {
         uMaterialSpecularLoc=glGetUniformLocation(program,MATERIAL_SPECULAR);
         uMaterialShininessLoc =glGetUniformLocation(program,MATERIAL_SHININESS);
 
-        uLightPositionLoc=glGetUniformLocation(program,LIGHT_POSITION);
+//        uLightPositionWorldLoc =glGetUniformLocation(program, LIGHT_POSITION_WORLD);
+        uLightPositionEyeLoc =glGetUniformLocation(program, LIGHT_POSITION_EYE);
         uLightAmbientLoc=glGetUniformLocation(program,LIGHT_AMBIENT);
         uLightDiffuseLoc=glGetUniformLocation(program,LIGHT_DIFFUSE);
         uLightSpecularLoc=glGetUniformLocation(program,LIGHT_SPECULAR);
 
     }
 
-    public void setUniforms(float[] MVMatrix, float[] MVPMatrix, Light light, int textureUnit, MaterialTex material) {
+    public void setUniforms(float[] MVMatrix, float[] MVPMatrix, Light light, MaterialTex material) {
 
         glUniformMatrix4fv(uMVMatrixLoc, 1, false, MVMatrix, 0);
         glUniformMatrix4fv(uMVPMatrixLoc, 1, false, MVPMatrix, 0);
         // Tell the texture uniform sampler to use this texture in the
         // shader by binding to texture unit 0.
-        glUniform1i(uTextureSamplerLoc, textureUnit);
+//        glUniform1i(uTextureSamplerLoc, material.diffuse);
 
 //        glUniform3fv(uMaterialAmbientLoc,1,material.ambient,0);
         glUniform1i(uMaterialDiffuseLoc,material.diffuse);
         glUniform3fv(uMaterialSpecularLoc,1,material.specular,0);
         glUniform1f(uMaterialShininessLoc,material.shininess);
 
-        glUniform3fv(uLightPositionLoc,1,light.position,0);
+//        glUniform3fv(uLightPositionWorldLoc,1,light.positionWorld,0);
+        glUniform3fv(uLightPositionEyeLoc,1,light.positionEye,0);
         glUniform3fv(uLightAmbientLoc,1,light.ambient,0);
         glUniform3fv(uLightDiffuseLoc,1,light.diffuse,0);
         glUniform3fv(uLightSpecularLoc,1,light.specular,0);
