@@ -122,7 +122,7 @@ public class LightSource {
 
 
         //light parameters
-        ambientPar=0.1f;
+        ambientPar=0.2f;
         diffusePar=0.5f;
         specularPar=1.0f;
 
@@ -168,5 +168,14 @@ public class LightSource {
     }
 
 
+    public void setPositionWorld(float[] lp) {
+        this.positionWorld=lp;
+        light.positionWorld=lp;
 
+    }
+
+    public void setPositionEye(float[] temp) {
+        this.positionEye=temp;
+        light.positionEye=temp;
+    }
 }

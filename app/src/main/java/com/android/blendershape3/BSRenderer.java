@@ -133,7 +133,7 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 //        table = new AirHockeyTable(mainActivity);
 //        torus2=new Torus2(mainActivity);
         lightPosition=new float[]{
-            1.0f, 1.0f, 1.0f, 1.0f
+            2.0f, 2.0f, 2.0f, 1.0f
         };
         //light source position passed to shape(draw)
         Matrix.multiplyMV(lightPosInEyeSpace,0,viewMatrix,0,lightPosition,0);
@@ -177,7 +177,18 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
         //light source
         float[] lp=lightSource.getPositionWorld();
+        /*
+        savedTime=(System.nanoTime()%360)/60;
+        float dx=(float)Math.sin(savedTime);
+        float dz=(float)Math.cos(savedTime);
+        lp[0]=dx;
+        lp[1]=dz;
+        lightSource.setPositionWorld(lp);
+        float[] temp=new float[4];
+        Matrix.multiplyMV(temp,0,viewMatrix,0,lp,0);
+        lightSource.setPositionEye(temp);
 
+*/
         Matrix.setIdentityM(modelMatrix,0);
         Matrix.translateM(modelMatrix,0,lp[0],lp[1],lp[2]);
         Matrix.scaleM(modelMatrix,0,0.1f,0.1f,0.1f);
@@ -205,8 +216,8 @@ public class BSRenderer implements GLSurfaceView.Renderer {
 
         //model Matrix for shape
         Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.translateM(modelMatrix, 0, 0.0f, 0.0f, 0.0f);
-        Matrix.rotateM(modelMatrix, 0, 0, 1.0f, 0.0f, 0.0f);
+        Matrix.translateM(modelMatrix, 0, 0.0f, -0.5f, 0.0f);
+        Matrix.rotateM(modelMatrix, 0, 30, 1.0f, 0.0f, 0.0f);
 
 
         // Rotate the shape taking the overall rotation into account.
